@@ -1,0 +1,106 @@
+from k e r a s import u t i l s
+from k e r a s . models import S e q u e n ti al , model from yaml
+from k e r a s . l a y e r s import Dense , Dropout , Fl a t t e n
+from k e r a s . l a y e r s import Conv2D , MaxPooling2D , LSTM, GRU
+from k e r a s . l a y e r s import TimeDi s t ribu ted , Conv3D , MaxPooling3D ,
+ZeroPadding3D
+from k e r a s . l a y e r s import B i d i r e c t i o n a l
+from k e r a s . p r e p r o c e s s i n g . image import ImageDataGenerator
+from k e r a s import backend a s K
+from i m u t i l s import f a c e u t i l s
+from s kl e a r n . p r e p r o c e s s i n g import MinMaxScaler
+import o s
+import s h u t i l
+import r e
+import i m u t i l s
+import numpy a s np
+import cv2
+import m a t pl o tli b . p y pl o t a s p l t
+from s kl e a r n . m e t ri c s import c o n f u si o n m a t ri x
+import i t e r t o o l s
+p=” / c o n t e n t / d ri v e /MyDrive/ P r o j e c t /LRW/ m a i n f i l e / ”
+X t r ai n = np . l o a d ( p+’ X t r ai n 3 . npy ’ )
+X t e s t = np . l o a d ( p+’ X t e s t 3 . npy ’ )
+X val = np . l o a d ( p+’ X val3 . npy ’ )
+y t r a i n = np . l o a d ( p+’ y t r a i n 3 . npy ’ )
+y t e s t = np . l o a d ( p+’ y t e s t 3 . npy ’ )
+y v al = np . l o a d ( p+’ y v al 3 . npy ’ )
+y t r a i n = np . d e l e t e ( y t r ai n , 0 , 1 )
+y v al = np . d e l e t e ( y v al , 0 , 1 )
+y t e s t = np . d e l e t e ( y t e s t , 0 , 1 )
+model = S e q u e n ti al ( )
+model . add (LSTM( 5 1 2 ) )
+model . add ( Dropout ( 0 . 3 ) )
+model . add ( Dense ( 4 , a c t i v a t i o n=’ so ftmax ’ ) )
+#MODEL FITTING
+model . compile ( l o s s=’ c a t e g o r i c a l c r o s s e n t r o p y ’ ,
+o p timi z e r=’ adam ’ ,
+m e t ri c s =[ ’ accu r ac y ’ ] )
+rom k e r a s . c a l l b a c k s import E a rl yS t oppin g
+from k e r a s . c a l l b a c k s import ModelCheckpoint
+from k e r a s . models import l o ad m odel
+e s = E a rl yS t oppin g ( monitor=’ v a l l o s s ’ , mode=’ min ’ , v e r b o s e =1, p a ti e n c e =50)
+mc = ModelCheckpoint ( p+’ b e s t m o d el . h5 ’ , monitor=’ v al a c c u r a c y ’ , mode=’max ’ ,
+v e r b o s e =1, s a v e b e s t o n l y=True )
+h i s t o r y = model . f i t ( X t r ain , y t r ai n , v a l i d a t i o n d a t a =(X val , y v al ) , ep och s
+=1000, b a t c h s i z e =256, c a l l b a c k s =[ es ,mc ] )
+model . summary ( )
+p l t . pl o t ( h i s t o r y . h i s t o r y [ ’ l o s s ’ ] , l a b e l=’ t r a i n ’ )
+p l t . pl o t ( h i s t o r y . h i s t o r y [ ’ v a l l o s s ’ ] , l a b e l=’ v al ’ )
+p l t . x l a b e l ( ”No . o f ep och s ” )
+p l t . y l a b e l ( ” Loss ” )
+p l t . l e g e n d ( )
+p l t . show ( )
+p l t . pl o t ( h i s t o r y . h i s t o r y [ ’ acc u r ac y ’ ] , l a b e l=’ t r a i n ’ )
+p l t . pl o t ( h i s t o r y . h i s t o r y [ ’ v al a c c u r a c y ’ ] , l a b e l=’ v al ’ )
+p l t . x l a b e l ( ”No . o f ep och s ” )
+p l t . y l a b e l ( ” Accuracy ” )
+p l t . l e g e n d ( )
+p l t . show ( )
+s aved m odel = l o ad m odel ( p+’ b e s t m o d el . h5 ’ )
+#TESTING THE MODEL
+model . compile ( l o s s=’ c a t e g o r i c a l c r o s s e n t r o p y ’ ,
+o p timi z e r=’ adam ’ ,
+m e t ri c s =[ ’ accu r ac y ’ ] )
+s c o r e s , acc = s aved m odel . e v al u a t e ( X te s t , y t e s t , v e r b o s e =0)
+model . summary ( )
+pr int ( ” Accuracy on the t e s t s e t : {}%” . format ( acc *1 0 0 ) )
+#FUNCTION FOR CONFUSION MATRIX
+def ge tC on f u si onM a t ri x ( s e l f , y t r u e , y pred , s p e a k e r l a b e l s ) :
+cm = c o n f u si o n m a t ri x ( y t r u e , y p red )
+pr int (cm)
+cmap = p l t . cm. Blue s # Color map f o r c o n f u s i o n m a t r ix
+t i t l e = ” C on fu si on Matrix ” # Pl o t t i t l e
+t i c k s = np . a r an ge (len ( s p e a k e r l a b e l s ) )
+fmt = ’ d ’ # Data forma t
+t h r e s h = cm.max( ) / 2. # T re s h ol d
+p l t . f i g u r e ( f i g s i z e =(20 , 1 0 ) )
+p l t . imshow (cm, i n t e r p o l a t i o n=’ n e a r e s t ’ , cmap=cmap )
+p l t . t i t l e ( ” C on fu si on Matrix ” )
+p l t . c ol o r b a r ( )
+p l t . x t i c k s ( ti c k s , s p e a k e r l a b e l s , r o t a t i o n =90)
+p l t . y t i c k s ( ti c k s , s p e a k e r l a b e l s )
+for ( i , j ) in i t e r t o o l s . p r oduc t ( range (cm. shape [ 0 ] ) , range (cm. shape
+[ 1 ] ) ) :
+p l t . t e x t ( j , i , format (cm[ i , j ] , fmt ) ,
+c o l o r=’ whi te ’ i f cm[ i , j ] > t h r e s h e l s e ’ bl a c k ’ )
+p l t . y l a b e l ( ’ True L abel ’ )
+p l t . x l a b e l ( ’ P r e di c t e d L abel ’ )
+#TESTING THE OUTPUT
+c l a s s d i c t ={ ’ABUSE ’ : 1 , ’BLACK’ : 2 , ’CRIME ’ : 3 , ’EXACTLY’ : 4 }
+y t r u e =[]
+y p red =[]
+count=0
+for word in c l a s s d i c t . key s ( ) :
+for i in range ( count , count +50) :
+t e s t = X t e s t [ i ] . r e s h a p e ( ( 1 , 2 5 , 4 0 ) )
+y = int ( np . argmax ( model . p r e d i c t ( t e s t ) , a x i s ==1) )
+temp = l i s t ( c l a s s d i c t . key s ( ) )
+y t r u e . append ( temp [ c l a s s d i c t [ word ] =1] )
+y p red . append ( temp [ y ] )
+pr int ( ”The p r e di c t e d word f o r {} i s {} ” . format ( temp [ c l a s s d i c t [ word
+] =1] , temp [ y ] ) )
+count+=50
+#DISPLAYING CONFUSION MATRIX
+s p e a k e r l a b e l s=l i s t ( c l a s s d i c t . key s ( ) )
+ge tC on f u si onM a t ri x ( , y t r u e , y pred , s p e a k e r l a b e l s )
